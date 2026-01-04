@@ -438,6 +438,14 @@ class CountertopEditor {
         }
         
         const element = this.selectedElement;
+        
+        // Helper function to escape HTML
+        const escapeHtml = (text) => {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+        
         let html = '<div class="property-group">';
         
         html += `
@@ -466,7 +474,7 @@ class CountertopEditor {
             html += `
                 <div class="property-group">
                     <label>Text</label>
-                    <input type="text" value="${element.text}" 
+                    <input type="text" value="${escapeHtml(element.text)}" 
                            onchange="editor.updateElementProperty('text', this.value)">
                 </div>
             `;
@@ -476,7 +484,7 @@ class CountertopEditor {
             html += `
                 <div class="property-group">
                     <label>Measurement</label>
-                    <input type="text" value="${element.length}" 
+                    <input type="text" value="${escapeHtml(element.length)}" 
                            onchange="editor.updateElementProperty('length', this.value)">
                 </div>
             `;

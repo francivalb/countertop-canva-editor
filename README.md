@@ -38,8 +38,8 @@ A professional web-based Canva-style editor tailored for countertop businesses o
 1. Open `index.html` in a modern web browser
 2. Select a template or create custom dimensions
 3. Choose materials and start designing
-4. Add text, shapes, measurements, and images
-5. Export your design as PNG or PDF
+4. Add text, shapes, measurements, and notes
+5. Export your design as PNG or save as JSON
 
 ### Usage Guide
 
