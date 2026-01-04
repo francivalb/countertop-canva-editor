@@ -1,46 +1,27 @@
-// Countertop Design Studio - Main Application
+// Countertop Design Studio - Main Application (Vanilla JS)
 
 class CountertopEditor {
     constructor() {
         this.canvas = null;
+        this.ctx = null;
         this.currentTool = 'select';
         this.currentMaterial = null;
-        this.zoomLevel = 1;
-        this.layers = [];
-        this.selectedObject = null;
+        this.elements = [];
+        this.selectedElement = null;
+        this.isDragging = false;
+        this.dragOffset = { x: 0, y: 0 };
+        this.canvasWidth = 96;
+        this.canvasDepth = 25;
+        this.scale = 8; // pixels per inch
         
-        // Material definitions with textures
+        // Material definitions
         this.materials = {
-            'granite-black': {
-                name: 'Black Granite',
-                fill: '#2c2c2c',
-                pattern: 'linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%)'
-            },
-            'granite-white': {
-                name: 'White Granite',
-                fill: '#f5f5f5',
-                pattern: 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)'
-            },
-            'marble-carrara': {
-                name: 'Carrara Marble',
-                fill: '#ffffff',
-                pattern: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)'
-            },
-            'quartz-calacatta': {
-                name: 'Calacatta Quartz',
-                fill: '#fafafa',
-                pattern: 'linear-gradient(135deg, #fafafa 0%, #ececec 100%)'
-            },
-            'granite-brown': {
-                name: 'Brown Granite',
-                fill: '#8b6f47',
-                pattern: 'linear-gradient(135deg, #8b6f47 0%, #654321 100%)'
-            },
-            'quartz-gray': {
-                name: 'Gray Quartz',
-                fill: '#9e9e9e',
-                pattern: 'linear-gradient(135deg, #9e9e9e 0%, #757575 100%)'
-            }
+            'granite-black': { name: 'Black Granite', fill: '#2c2c2c' },
+            'granite-white': { name: 'White Granite', fill: '#f5f5f5' },
+            'marble-carrara': { name: 'Carrara Marble', fill: '#ffffff' },
+            'quartz-calacatta': { name: 'Calacatta Quartz', fill: '#fafafa' },
+            'granite-brown': { name: 'Brown Granite', fill: '#8b6f47' },
+            'quartz-gray': { name: 'Gray Quartz', fill: '#9e9e9e' }
         };
         
         // Template sizes (width x depth in inches)
@@ -51,6 +32,8 @@ class CountertopEditor {
             'custom': { width: 96, depth: 25, name: 'Custom' }
         };
         
+        this.countertopMaterial = '#f5f5f5';
+        
         this.init();
     }
     
@@ -59,27 +42,21 @@ class CountertopEditor {
         this.setupEventListeners();
         this.loadTemplate('kitchen');
         this.updateCanvasInfo();
+        this.render();
     }
     
     setupCanvas() {
-        const canvasElement = document.getElementById('mainCanvas');
-        this.canvas = new fabric.Canvas('mainCanvas', {
-            backgroundColor: '#ffffff',
-            selection: true,
-            preserveObjectStacking: true
-        });
+        this.canvas = document.getElementById('mainCanvas');
+        this.ctx = this.canvas.getContext('2d');
         
         // Set initial canvas size
-        this.canvas.setWidth(800);
-        this.canvas.setHeight(400);
+        this.canvas.width = 800;
+        this.canvas.height = 400;
         
         // Canvas event listeners
-        this.canvas.on('selection:created', (e) => this.onObjectSelected(e));
-        this.canvas.on('selection:updated', (e) => this.onObjectSelected(e));
-        this.canvas.on('selection:cleared', () => this.onSelectionCleared());
-        this.canvas.on('object:modified', () => this.updateLayers());
-        this.canvas.on('object:added', () => this.updateLayers());
-        this.canvas.on('object:removed', () => this.updateLayers());
+        this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+        this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+        this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
     }
     
     setupEventListeners() {
@@ -99,7 +76,7 @@ class CountertopEditor {
         document.querySelectorAll('.material-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 const material = e.currentTarget.dataset.material;
-                this.selectMaterial(material);
+                this.selectMaterial(material, e.currentTarget);
             });
         });
         
@@ -107,18 +84,13 @@ class CountertopEditor {
         document.querySelectorAll('.tool-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tool = e.currentTarget.dataset.tool;
-                this.selectTool(tool);
+                this.selectTool(tool, e.currentTarget);
             });
         });
         
-        // Zoom controls
-        document.getElementById('zoomIn').addEventListener('click', () => this.zoom(1.2));
-        document.getElementById('zoomOut').addEventListener('click', () => this.zoom(0.8));
-        document.getElementById('zoomFit').addEventListener('click', () => this.zoomToFit());
-        
         // Export buttons
         document.getElementById('exportPNG').addEventListener('click', () => this.exportPNG());
-        document.getElementById('exportPDF').addEventListener('click', () => this.exportPDF());
+        document.getElementById('saveDesign').addEventListener('click', () => this.saveDesign());
         document.getElementById('newProject').addEventListener('click', () => this.newProject());
         
         // Dimensions
@@ -127,238 +99,304 @@ class CountertopEditor {
         // Custom size modal
         document.getElementById('cancelCustomSize').addEventListener('click', () => this.hideCustomSizeModal());
         document.getElementById('applyCustomSize').addEventListener('click', () => this.applyCustomSize());
-        
-        // Image upload
-        document.getElementById('imageUpload').addEventListener('change', (e) => this.handleImageUpload(e));
-        
-        // Canvas click for tools
-        this.canvas.on('mouse:down', (e) => this.handleCanvasClick(e));
     }
     
     loadTemplate(templateName) {
         const template = this.templates[templateName];
         if (!template) return;
         
-        // Update canvas dimensions based on template
-        const scale = 8; // 8 pixels per inch
-        const width = template.width * scale;
-        const height = template.depth * scale;
+        this.canvasWidth = template.width;
+        this.canvasDepth = template.depth;
         
-        this.canvas.setWidth(Math.min(width, 1200));
-        this.canvas.setHeight(Math.min(height, 600));
+        // Update canvas dimensions
+        const width = Math.min(template.width * this.scale, 1200);
+        const height = Math.min(template.depth * this.scale, 600);
+        
+        this.canvas.width = width;
+        this.canvas.height = height;
         
         // Update input fields
         document.getElementById('canvasWidth').value = template.width;
         document.getElementById('canvasDepth').value = template.depth;
         
-        // Clear canvas
-        this.canvas.clear();
-        this.canvas.backgroundColor = '#ffffff';
-        
-        // Add countertop base
-        const countertop = new fabric.Rect({
-            left: 0,
-            top: 0,
-            width: this.canvas.width,
-            height: this.canvas.height,
-            fill: '#f5f5f5',
-            stroke: '#dee2e6',
-            strokeWidth: 2,
-            selectable: false,
-            name: 'countertop-base'
-        });
-        
-        this.canvas.add(countertop);
-        this.canvas.sendToBack(countertop);
-        
-        // Add dimension labels
-        this.addDimensionLabels(template.width, template.depth);
+        // Clear elements
+        this.elements = [];
+        this.selectedElement = null;
         
         this.updateCanvasInfo();
-        this.updateLayers();
-        this.canvas.renderAll();
+        this.updateElementsList();
+        this.render();
     }
     
-    addDimensionLabels(width, depth) {
-        // Width label
-        const widthLabel = new fabric.Text(`${width}"`, {
-            left: this.canvas.width / 2,
-            top: this.canvas.height + 10,
-            fontSize: 14,
-            fill: '#495057',
-            fontFamily: 'Arial',
-            originX: 'center',
-            selectable: false,
-            name: 'dimension-label'
-        });
-        
-        // Depth label
-        const depthLabel = new fabric.Text(`${depth}"`, {
-            left: -20,
-            top: this.canvas.height / 2,
-            fontSize: 14,
-            fill: '#495057',
-            fontFamily: 'Arial',
-            angle: -90,
-            originX: 'center',
-            originY: 'center',
-            selectable: false,
-            name: 'dimension-label'
-        });
-        
-        this.canvas.add(widthLabel, depthLabel);
-    }
-    
-    selectMaterial(materialId) {
+    selectMaterial(materialId, element) {
         // Update UI
         document.querySelectorAll('.material-item').forEach(item => {
             item.classList.remove('active');
         });
-        event.currentTarget.classList.add('active');
+        element.classList.add('active');
         
         this.currentMaterial = materialId;
-        
-        // Apply to selected object if any
-        const activeObject = this.canvas.getActiveObject();
-        if (activeObject && activeObject.name === 'countertop-base') {
-            const material = this.materials[materialId];
-            activeObject.set('fill', material.fill);
-            this.canvas.renderAll();
-        }
+        this.countertopMaterial = this.materials[materialId].fill;
+        this.render();
     }
     
-    selectTool(tool) {
+    selectTool(tool, element) {
         // Update UI
         document.querySelectorAll('.tool-btn').forEach(btn => {
             btn.classList.remove('active');
         });
-        event.currentTarget.classList.add('active');
+        element.classList.add('active');
         
         this.currentTool = tool;
-        
-        // Handle specific tool actions
-        if (tool === 'image') {
-            document.getElementById('imageUpload').click();
-        }
+        this.selectedElement = null;
+        this.render();
     }
     
-    handleCanvasClick(e) {
-        if (!e.target) {
-            switch(this.currentTool) {
-                case 'text':
-                    this.addText(e.pointer.x, e.pointer.y);
+    handleMouseDown(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        if (this.currentTool === 'select') {
+            // Check if clicking on an element
+            this.selectedElement = null;
+            for (let i = this.elements.length - 1; i >= 0; i--) {
+                if (this.isPointInElement(x, y, this.elements[i])) {
+                    this.selectedElement = this.elements[i];
+                    this.isDragging = true;
+                    this.dragOffset.x = x - this.elements[i].x;
+                    this.dragOffset.y = y - this.elements[i].y;
                     break;
-                case 'shape':
-                    this.addShape(e.pointer.x, e.pointer.y);
-                    break;
-                case 'measure':
-                    this.addMeasurement(e.pointer.x, e.pointer.y);
-                    break;
+                }
             }
+            this.updateObjectProperties();
+            this.render();
+        } else {
+            // Add new element
+            this.addElement(x, y);
         }
     }
     
-    addText(x, y) {
-        const text = new fabric.IText('Click to edit', {
-            left: x,
-            top: y,
-            fontSize: 20,
-            fill: '#2c3e50',
-            fontFamily: 'Arial',
-            name: 'text-element'
+    handleMouseMove(e) {
+        if (this.isDragging && this.selectedElement) {
+            const rect = this.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            this.selectedElement.x = x - this.dragOffset.x;
+            this.selectedElement.y = y - this.dragOffset.y;
+            
+            this.render();
+        }
+    }
+    
+    handleMouseUp(e) {
+        this.isDragging = false;
+    }
+    
+    isPointInElement(px, py, element) {
+        return px >= element.x && px <= element.x + element.width &&
+               py >= element.y && py <= element.y + element.height;
+    }
+    
+    addElement(x, y) {
+        let element = null;
+        
+        switch (this.currentTool) {
+            case 'text':
+                element = {
+                    type: 'text',
+                    x: x,
+                    y: y,
+                    width: 150,
+                    height: 30,
+                    text: 'Click to edit',
+                    fontSize: 16,
+                    color: '#2c3e50'
+                };
+                break;
+                
+            case 'shape':
+                element = {
+                    type: 'shape',
+                    x: x,
+                    y: y,
+                    width: 100,
+                    height: 100,
+                    color: '#6366f1'
+                };
+                break;
+                
+            case 'measure':
+                element = {
+                    type: 'measure',
+                    x: x,
+                    y: y,
+                    width: 150,
+                    height: 30,
+                    length: '12"',
+                    color: '#dc3545'
+                };
+                break;
+                
+            case 'note':
+                element = {
+                    type: 'note',
+                    x: x,
+                    y: y,
+                    width: 120,
+                    height: 80,
+                    text: 'Note',
+                    color: '#ffc107'
+                };
+                break;
+        }
+        
+        if (element) {
+            this.elements.push(element);
+            this.selectedElement = element;
+            this.updateElementsList();
+            this.render();
+        }
+    }
+    
+    render() {
+        // Clear canvas
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Draw countertop background
+        this.ctx.fillStyle = this.countertopMaterial;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Draw border
+        this.ctx.strokeStyle = '#dee2e6';
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Draw grid (optional)
+        this.drawGrid();
+        
+        // Draw all elements
+        this.elements.forEach(element => {
+            this.drawElement(element);
         });
         
-        this.canvas.add(text);
-        this.canvas.setActiveObject(text);
-        this.canvas.renderAll();
+        // Draw selection highlight
+        if (this.selectedElement) {
+            this.drawSelectionBox(this.selectedElement);
+        }
+        
+        // Draw dimension labels
+        this.drawDimensions();
     }
     
-    addShape(x, y) {
-        const rect = new fabric.Rect({
-            left: x,
-            top: y,
-            width: 100,
-            height: 100,
-            fill: '#6366f1',
-            stroke: '#4f46e5',
-            strokeWidth: 2,
-            opacity: 0.7,
-            name: 'shape-element'
-        });
+    drawGrid() {
+        this.ctx.strokeStyle = '#e9ecef';
+        this.ctx.lineWidth = 0.5;
         
-        this.canvas.add(rect);
-        this.canvas.setActiveObject(rect);
-        this.canvas.renderAll();
+        const gridSize = 50; // 50 pixels between lines
+        
+        for (let x = gridSize; x < this.canvas.width; x += gridSize) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, 0);
+            this.ctx.lineTo(x, this.canvas.height);
+            this.ctx.stroke();
+        }
+        
+        for (let y = gridSize; y < this.canvas.height; y += gridSize) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, y);
+            this.ctx.lineTo(this.canvas.width, y);
+            this.ctx.stroke();
+        }
     }
     
-    addMeasurement(x, y) {
-        const line = new fabric.Line([x, y, x + 100, y], {
-            stroke: '#dc3545',
-            strokeWidth: 2,
-            name: 'measurement-line'
-        });
-        
-        const text = new fabric.Text('100"', {
-            left: x + 50,
-            top: y - 20,
-            fontSize: 14,
-            fill: '#dc3545',
-            fontFamily: 'Arial',
-            originX: 'center',
-            name: 'measurement-text'
-        });
-        
-        const group = new fabric.Group([line, text], {
-            name: 'measurement'
-        });
-        
-        this.canvas.add(group);
-        this.canvas.setActiveObject(group);
-        this.canvas.renderAll();
+    drawElement(element) {
+        switch (element.type) {
+            case 'text':
+                this.ctx.fillStyle = element.color;
+                this.ctx.font = `${element.fontSize}px Arial`;
+                this.ctx.fillText(element.text, element.x, element.y + element.fontSize);
+                break;
+                
+            case 'shape':
+                this.ctx.fillStyle = element.color;
+                this.ctx.globalAlpha = 0.7;
+                this.ctx.fillRect(element.x, element.y, element.width, element.height);
+                this.ctx.globalAlpha = 1.0;
+                this.ctx.strokeStyle = '#4f46e5';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(element.x, element.y, element.width, element.height);
+                break;
+                
+            case 'measure':
+                this.ctx.strokeStyle = element.color;
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.moveTo(element.x, element.y);
+                this.ctx.lineTo(element.x + element.width, element.y);
+                this.ctx.stroke();
+                
+                // Draw arrows
+                this.ctx.beginPath();
+                this.ctx.moveTo(element.x, element.y - 5);
+                this.ctx.lineTo(element.x, element.y + 5);
+                this.ctx.moveTo(element.x + element.width, element.y - 5);
+                this.ctx.lineTo(element.x + element.width, element.y + 5);
+                this.ctx.stroke();
+                
+                // Draw text
+                this.ctx.fillStyle = element.color;
+                this.ctx.font = '14px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(element.length, element.x + element.width / 2, element.y - 10);
+                this.ctx.textAlign = 'left';
+                break;
+                
+            case 'note':
+                this.ctx.fillStyle = element.color;
+                this.ctx.fillRect(element.x, element.y, element.width, element.height);
+                this.ctx.strokeStyle = '#ff9800';
+                this.ctx.lineWidth = 1;
+                this.ctx.strokeRect(element.x, element.y, element.width, element.height);
+                
+                this.ctx.fillStyle = '#333';
+                this.ctx.font = '12px Arial';
+                this.ctx.fillText(element.text, element.x + 5, element.y + 20);
+                break;
+        }
     }
     
-    handleImageUpload(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            fabric.Image.fromURL(event.target.result, (img) => {
-                img.scale(0.5);
-                img.set({
-                    left: 100,
-                    top: 100,
-                    name: 'image-element'
-                });
-                this.canvas.add(img);
-                this.canvas.setActiveObject(img);
-                this.canvas.renderAll();
-            });
-        };
-        reader.readAsDataURL(file);
-        
-        // Reset file input
-        e.target.value = '';
+    drawSelectionBox(element) {
+        this.ctx.strokeStyle = '#6366f1';
+        this.ctx.lineWidth = 2;
+        this.ctx.setLineDash([5, 5]);
+        this.ctx.strokeRect(element.x - 5, element.y - 5, element.width + 10, element.height + 10);
+        this.ctx.setLineDash([]);
     }
     
-    zoom(factor) {
-        this.zoomLevel *= factor;
-        this.zoomLevel = Math.max(0.1, Math.min(5, this.zoomLevel));
+    drawDimensions() {
+        this.ctx.fillStyle = '#495057';
+        this.ctx.font = '12px Arial';
+        this.ctx.textAlign = 'center';
         
-        this.canvas.setZoom(this.zoomLevel);
-        this.updateZoomDisplay();
-        this.canvas.renderAll();
+        // Width label
+        this.ctx.fillText(`${this.canvasWidth}"`, this.canvas.width / 2, this.canvas.height - 5);
+        
+        // Depth label
+        this.ctx.save();
+        this.ctx.translate(10, this.canvas.height / 2);
+        this.ctx.rotate(-Math.PI / 2);
+        this.ctx.fillText(`${this.canvasDepth}"`, 0, 0);
+        this.ctx.restore();
+        
+        this.ctx.textAlign = 'left';
     }
     
-    zoomToFit() {
-        this.zoomLevel = 1;
-        this.canvas.setZoom(1);
-        this.updateZoomDisplay();
-        this.canvas.renderAll();
-    }
-    
-    updateZoomDisplay() {
-        document.getElementById('zoomLevel').textContent = Math.round(this.zoomLevel * 100) + '%';
+    updateCanvasInfo() {
+        const thickness = document.getElementById('thickness').value;
+        document.getElementById('canvasInfo').textContent = 
+            `${this.canvasWidth}" × ${this.canvasDepth}" × ${thickness}" Countertop`;
     }
     
     applyDimensions() {
@@ -391,91 +429,61 @@ class CountertopEditor {
         }
     }
     
-    updateCanvasInfo() {
-        const width = document.getElementById('canvasWidth').value;
-        const depth = document.getElementById('canvasDepth').value;
-        const thickness = document.getElementById('thickness').value;
-        
-        document.getElementById('canvasInfo').textContent = 
-            `${width}" × ${depth}" × ${thickness}" Countertop`;
-    }
-    
-    onObjectSelected(e) {
-        this.selectedObject = e.selected[0];
-        this.updateObjectProperties();
-    }
-    
-    onSelectionCleared() {
-        this.selectedObject = null;
-        this.updateObjectProperties();
-    }
-    
     updateObjectProperties() {
         const panel = document.getElementById('objectProperties');
         
-        if (!this.selectedObject) {
+        if (!this.selectedElement) {
             panel.innerHTML = '<p class="no-selection">Select an object to edit properties</p>';
             return;
         }
         
-        const obj = this.selectedObject;
+        const element = this.selectedElement;
         let html = '<div class="property-group">';
         
-        // Position
         html += `
             <label>Position X</label>
-            <input type="number" value="${Math.round(obj.left)}" 
-                   onchange="editor.updateObjectProperty('left', this.value)">
+            <input type="number" value="${Math.round(element.x)}" 
+                   onchange="editor.updateElementProperty('x', this.value)">
         </div>
         <div class="property-group">
             <label>Position Y</label>
-            <input type="number" value="${Math.round(obj.top)}" 
-                   onchange="editor.updateObjectProperty('top', this.value)">
+            <input type="number" value="${Math.round(element.y)}" 
+                   onchange="editor.updateElementProperty('y', this.value)">
+        </div>
+        <div class="property-group">
+            <label>Width</label>
+            <input type="number" value="${Math.round(element.width)}" 
+                   onchange="editor.updateElementProperty('width', this.value)">
+        </div>
+        <div class="property-group">
+            <label>Height</label>
+            <input type="number" value="${Math.round(element.height)}" 
+                   onchange="editor.updateElementProperty('height', this.value)">
+        </div>
         `;
         
-        // Size (if applicable)
-        if (obj.width) {
+        if (element.type === 'text' || element.type === 'note') {
             html += `
-                </div>
                 <div class="property-group">
-                    <label>Width</label>
-                    <input type="number" value="${Math.round(obj.width * obj.scaleX)}" 
-                           onchange="editor.updateObjectProperty('width', this.value)">
+                    <label>Text</label>
+                    <input type="text" value="${element.text}" 
+                           onchange="editor.updateElementProperty('text', this.value)">
+                </div>
             `;
         }
         
-        if (obj.height) {
+        if (element.type === 'measure') {
             html += `
-                </div>
                 <div class="property-group">
-                    <label>Height</label>
-                    <input type="number" value="${Math.round(obj.height * obj.scaleY)}" 
-                           onchange="editor.updateObjectProperty('height', this.value)">
+                    <label>Measurement</label>
+                    <input type="text" value="${element.length}" 
+                           onchange="editor.updateElementProperty('length', this.value)">
+                </div>
             `;
         }
         
-        // Rotation
         html += `
-            </div>
-            <div class="property-group">
-                <label>Rotation (degrees)</label>
-                <input type="number" value="${Math.round(obj.angle)}" 
-                       onchange="editor.updateObjectProperty('angle', this.value)">
-        `;
-        
-        // Opacity
-        html += `
-            </div>
-            <div class="property-group">
-                <label>Opacity</label>
-                <input type="range" min="0" max="1" step="0.1" value="${obj.opacity || 1}" 
-                       onchange="editor.updateObjectProperty('opacity', this.value)">
-        `;
-        
-        // Delete button
-        html += `
-            </div>
-            <button onclick="editor.deleteSelectedObject()" 
+            <button onclick="editor.deleteSelectedElement()" 
                     class="btn btn-secondary btn-block" 
                     style="background: #dc3545; color: white; margin-top: 12px;">
                 Delete Object
@@ -485,139 +493,100 @@ class CountertopEditor {
         panel.innerHTML = html;
     }
     
-    updateObjectProperty(property, value) {
-        if (!this.selectedObject) return;
+    updateElementProperty(property, value) {
+        if (!this.selectedElement) return;
         
-        const numValue = parseFloat(value);
-        
-        if (property === 'width') {
-            this.selectedObject.scaleX = numValue / this.selectedObject.width;
-        } else if (property === 'height') {
-            this.selectedObject.scaleY = numValue / this.selectedObject.height;
+        if (property === 'x' || property === 'y' || property === 'width' || property === 'height') {
+            this.selectedElement[property] = parseFloat(value);
         } else {
-            this.selectedObject.set(property, numValue);
+            this.selectedElement[property] = value;
         }
         
-        this.canvas.renderAll();
+        this.render();
     }
     
-    deleteSelectedObject() {
-        if (!this.selectedObject) return;
+    deleteSelectedElement() {
+        if (!this.selectedElement) return;
         
-        this.canvas.remove(this.selectedObject);
-        this.selectedObject = null;
-        this.canvas.renderAll();
+        const index = this.elements.indexOf(this.selectedElement);
+        if (index > -1) {
+            this.elements.splice(index, 1);
+        }
+        
+        this.selectedElement = null;
+        this.updateObjectProperties();
+        this.updateElementsList();
+        this.render();
     }
     
-    updateLayers() {
-        const layersList = document.getElementById('layersList');
-        const objects = this.canvas.getObjects().filter(obj => obj.name !== 'dimension-label');
+    updateElementsList() {
+        const elementsList = document.getElementById('elementsList');
         
-        if (objects.length === 0) {
-            layersList.innerHTML = '<p class="no-selection">No layers</p>';
+        if (this.elements.length === 0) {
+            elementsList.innerHTML = '<p class="no-selection">No elements</p>';
             return;
         }
         
         let html = '';
-        objects.reverse().forEach((obj, index) => {
-            const name = obj.name || 'Layer ' + (objects.length - index);
-            const isActive = this.selectedObject === obj ? 'active' : '';
+        this.elements.forEach((element, index) => {
+            const name = `${element.type} ${index + 1}`;
+            const isActive = this.selectedElement === element ? 'active' : '';
             
             html += `
-                <div class="layer-item ${isActive}" onclick="editor.selectLayer(${objects.length - index - 1})">
+                <div class="layer-item ${isActive}" onclick="editor.selectElement(${index})">
                     <span>${name}</span>
-                    <span class="delete-layer" onclick="event.stopPropagation(); editor.deleteLayer(${objects.length - index - 1})">✕</span>
+                    <span class="delete-layer" onclick="event.stopPropagation(); editor.deleteElement(${index})">✕</span>
                 </div>
             `;
         });
         
-        layersList.innerHTML = html;
+        elementsList.innerHTML = html;
     }
     
-    selectLayer(index) {
-        const objects = this.canvas.getObjects().filter(obj => obj.name !== 'dimension-label');
-        const obj = objects.reverse()[index];
-        
-        if (obj) {
-            this.canvas.setActiveObject(obj);
-            this.canvas.renderAll();
-        }
+    selectElement(index) {
+        this.selectedElement = this.elements[index];
+        this.updateObjectProperties();
+        this.updateElementsList();
+        this.render();
     }
     
-    deleteLayer(index) {
-        const objects = this.canvas.getObjects().filter(obj => obj.name !== 'dimension-label');
-        const obj = objects.reverse()[index];
-        
-        if (obj) {
-            this.canvas.remove(obj);
-            this.canvas.renderAll();
-        }
+    deleteElement(index) {
+        this.elements.splice(index, 1);
+        this.selectedElement = null;
+        this.updateObjectProperties();
+        this.updateElementsList();
+        this.render();
     }
     
     exportPNG() {
-        // Hide dimension labels temporarily
-        const labels = this.canvas.getObjects().filter(obj => obj.name === 'dimension-label');
-        labels.forEach(label => label.set('opacity', 0));
-        this.canvas.renderAll();
-        
-        // Export
-        const dataURL = this.canvas.toDataURL({
-            format: 'png',
-            quality: 1
-        });
-        
-        // Restore labels
-        labels.forEach(label => label.set('opacity', 1));
-        this.canvas.renderAll();
-        
-        // Download
         const link = document.createElement('a');
         link.download = 'countertop-design.png';
-        link.href = dataURL;
+        link.href = this.canvas.toDataURL('image/png');
         link.click();
     }
     
-    exportPDF() {
-        // Hide dimension labels temporarily
-        const labels = this.canvas.getObjects().filter(obj => obj.name === 'dimension-label');
-        labels.forEach(label => label.set('opacity', 0));
-        this.canvas.renderAll();
+    saveDesign() {
+        const design = {
+            width: this.canvasWidth,
+            depth: this.canvasDepth,
+            thickness: document.getElementById('thickness').value,
+            material: this.currentMaterial,
+            elements: this.elements
+        };
         
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({
-            orientation: this.canvas.width > this.canvas.height ? 'landscape' : 'portrait',
-            unit: 'px',
-            format: [this.canvas.width, this.canvas.height]
-        });
-        
-        const imgData = this.canvas.toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', 0, 0, this.canvas.width, this.canvas.height);
-        
-        // Add specifications
-        const width = document.getElementById('canvasWidth').value;
-        const depth = document.getElementById('canvasDepth').value;
-        const thickness = document.getElementById('thickness').value;
-        
-        pdf.addPage();
-        pdf.setFontSize(16);
-        pdf.text('Countertop Specifications', 20, 30);
-        pdf.setFontSize(12);
-        pdf.text(`Width: ${width} inches`, 20, 50);
-        pdf.text(`Depth: ${depth} inches`, 20, 65);
-        pdf.text(`Thickness: ${thickness} inches`, 20, 80);
-        pdf.text(`Date: ${new Date().toLocaleDateString()}`, 20, 95);
-        
-        // Restore labels
-        labels.forEach(label => label.set('opacity', 1));
-        this.canvas.renderAll();
-        
-        pdf.save('countertop-design.pdf');
+        const json = JSON.stringify(design, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.download = 'countertop-design.json';
+        link.href = URL.createObjectURL(blob);
+        link.click();
     }
     
     newProject() {
         if (confirm('Are you sure you want to start a new project? All unsaved changes will be lost.')) {
             this.loadTemplate('kitchen');
             this.currentMaterial = null;
+            this.countertopMaterial = '#f5f5f5';
             document.querySelectorAll('.material-item').forEach(item => {
                 item.classList.remove('active');
             });

@@ -16,7 +16,7 @@
             <div class="header-actions">
                 <button id="newProject" class="btn btn-secondary">New Project</button>
                 <button id="exportPNG" class="btn btn-primary">Export PNG</button>
-                <button id="exportPDF" class="btn btn-primary">Export PDF</button>
+                <button id="saveDesign" class="btn btn-primary">Save Design</button>
             </div>
         </header>
 
@@ -78,8 +78,8 @@
                         <button class="tool-btn" data-tool="measure">
                             <span>📏</span> Measure
                         </button>
-                        <button class="tool-btn" data-tool="image">
-                            <span>🖼️</span> Image
+                        <button class="tool-btn" data-tool="note">
+                            <span>📋</span> Note
                         </button>
                     </div>
                 </div>
@@ -109,9 +109,9 @@
                 </div>
 
                 <div class="tool-section">
-                    <h3>Layers</h3>
-                    <div id="layersList" class="layers-list">
-                        <!-- Layers will be dynamically added here -->
+                    <h3>Elements</h3>
+                    <div id="elementsList" class="elements-list">
+                        <!-- Elements will be dynamically added here -->
                     </div>
                 </div>
             </aside>
@@ -165,11 +165,6 @@
         </div>
     </div>
 
-    <!-- Hidden file input for image upload -->
-    <input type="file" id="imageUpload" accept="image/*" style="display: none;">
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
