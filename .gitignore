@@ -35,3 +35,29 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Dependencies #
+################
+node_modules/
+bower_components/
+
+# IDE files #
+#############
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts #
+###################
+dist/
+build/
+*.min.js
+*.min.css
+
+# Temporary files #
+###################
+tmp/
+temp/
+*.tmp
