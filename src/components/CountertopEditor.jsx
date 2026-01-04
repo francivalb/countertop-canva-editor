@@ -1,8 +1,11 @@
 import { useRef, useState, useEffect } from 'react'
-import { Stage, Layer, Rect, Transformer, Line, Text } from 'react-konva'
+import { Stage, Layer, Rect, Transformer, Line } from 'react-konva'
 import './CountertopEditor.css'
 
 const GRID_SIZE = 20
+const TOOLBAR_WIDTH = 250
+const QUOTE_PANEL_WIDTH = 300
+const HEADER_HEIGHT = 100
 
 const CountertopShape = ({ shape, isSelected, onSelect, onChange }) => {
   const shapeRef = useRef()
@@ -178,8 +181,8 @@ const CountertopEditor = ({
       <div className="canvas-wrapper">
         <Stage
           ref={stageRef}
-          width={window.innerWidth - 550}
-          height={window.innerHeight - 100}
+          width={window.innerWidth - TOOLBAR_WIDTH - QUOTE_PANEL_WIDTH}
+          height={window.innerHeight - HEADER_HEIGHT}
           onMouseDown={handleMouseDown}
           onMousemove={handleMouseMove}
           onMouseup={handleMouseUp}

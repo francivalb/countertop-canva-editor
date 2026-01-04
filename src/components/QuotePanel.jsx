@@ -1,7 +1,10 @@
+import { useCallback } from 'react'
 import './QuotePanel.css'
 
+const PIXELS_PER_INCH = 10
+const L_SHAPE_AREA_RATIO = 0.75 // L-shape is approximately 75% of full rectangle area
+
 const QuotePanel = ({ shapes, pricePerSqFt, onPriceChange }) => {
-  const PIXELS_PER_INCH = 10
 
   const calculateArea = (shape) => {
     if (shape.type === 'rectangle') {
@@ -11,12 +14,10 @@ const QuotePanel = ({ shapes, pricePerSqFt, onPriceChange }) => {
     }
     
     if (shape.type === 'l-shape') {
-      // L-shape area calculation
       const widthInInches = shape.width / PIXELS_PER_INCH
       const heightInInches = shape.height / PIXELS_PER_INCH
       const totalArea = (widthInInches * heightInInches) / 144
-      // L-shape is approximately 75% of full rectangle
-      return totalArea * 0.75
+      return totalArea * L_SHAPE_AREA_RATIO
     }
     
     return 0
@@ -25,7 +26,8 @@ const QuotePanel = ({ shapes, pricePerSqFt, onPriceChange }) => {
   const totalArea = shapes.reduce((sum, shape) => sum + calculateArea(shape), 0)
   const totalCost = totalArea * pricePerSqFt
 
-  const exportQuote = () => {
+  const exportQuote = useCallback(() => {
+    const timestamp = Date.now()
     const quoteData = {
       date: new Date().toLocaleDateString(),
       shapes: shapes.map((shape, index) => ({
@@ -48,13 +50,12 @@ const QuotePanel = ({ shapes, pricePerSqFt, onPriceChange }) => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    // eslint-disable-next-line react-hooks/purity
-    a.download = 'countertop-quote-' + Date.now() + '.json'
+    a.download = `countertop-quote-${timestamp}.json`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-  }
+  }, [shapes, totalArea, pricePerSqFt, totalCost])
 
   return (
     <div className="quote-panel">
