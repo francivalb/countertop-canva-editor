@@ -604,7 +604,9 @@ class CountertopEditor {
         const link = document.createElement('a');
         link.download = 'countertop-design.png';
         link.href = this.canvas.toDataURL('image/png');
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
     }
     
     saveDesign() {
@@ -622,7 +624,9 @@ class CountertopEditor {
         const link = document.createElement('a');
         link.download = 'countertop-design.json';
         link.href = url;
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
         
         // Clean up the blob URL to prevent memory leaks
         setTimeout(() => URL.revokeObjectURL(url), 100);
