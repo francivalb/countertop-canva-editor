@@ -576,10 +576,14 @@ class CountertopEditor {
         
         const json = JSON.stringify(design, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.download = 'countertop-design.json';
-        link.href = URL.createObjectURL(blob);
+        link.href = url;
         link.click();
+        
+        // Clean up the blob URL to prevent memory leaks
+        setTimeout(() => URL.revokeObjectURL(url), 100);
     }
     
     newProject() {
