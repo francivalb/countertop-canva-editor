@@ -432,15 +432,20 @@ class CountertopEditor {
     updateObjectProperties() {
         const panel = document.getElementById('objectProperties');
         
+        // Clear panel properly
+        while (panel.firstChild) {
+            panel.removeChild(panel.firstChild);
+        }
+        
         if (!this.selectedElement) {
-            panel.innerHTML = '<p class="no-selection">Select an object to edit properties</p>';
+            const noSelection = document.createElement('p');
+            noSelection.className = 'no-selection';
+            noSelection.textContent = 'Select an object to edit properties';
+            panel.appendChild(noSelection);
             return;
         }
         
         const element = this.selectedElement;
-        
-        // Clear panel and build with DOM elements for better security
-        panel.innerHTML = '';
         
         // Position X
         const posXGroup = this.createPropertyInput('Position X', 'number', Math.round(element.x), (value) => {
@@ -539,13 +544,18 @@ class CountertopEditor {
     updateElementsList() {
         const elementsList = document.getElementById('elementsList');
         
-        if (this.elements.length === 0) {
-            elementsList.innerHTML = '<p class="no-selection">No elements</p>';
-            return;
+        // Clear the list properly
+        while (elementsList.firstChild) {
+            elementsList.removeChild(elementsList.firstChild);
         }
         
-        // Clear the list
-        elementsList.innerHTML = '';
+        if (this.elements.length === 0) {
+            const noElements = document.createElement('p');
+            noElements.className = 'no-selection';
+            noElements.textContent = 'No elements';
+            elementsList.appendChild(noElements);
+            return;
+        }
         
         this.elements.forEach((element, index) => {
             const name = `${element.type} ${index + 1}`;
