@@ -439,66 +439,75 @@ class CountertopEditor {
         
         const element = this.selectedElement;
         
-        // Helper function to escape HTML
-        const escapeHtml = (text) => {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        };
+        // Clear panel and build with DOM elements for better security
+        panel.innerHTML = '';
         
-        let html = '<div class="property-group">';
+        // Position X
+        const posXGroup = this.createPropertyInput('Position X', 'number', Math.round(element.x), (value) => {
+            this.updateElementProperty('x', value);
+        });
+        panel.appendChild(posXGroup);
         
-        html += `
-            <label>Position X</label>
-            <input type="number" value="${Math.round(element.x)}" 
-                   onchange="editor.updateElementProperty('x', this.value)">
-        </div>
-        <div class="property-group">
-            <label>Position Y</label>
-            <input type="number" value="${Math.round(element.y)}" 
-                   onchange="editor.updateElementProperty('y', this.value)">
-        </div>
-        <div class="property-group">
-            <label>Width</label>
-            <input type="number" value="${Math.round(element.width)}" 
-                   onchange="editor.updateElementProperty('width', this.value)">
-        </div>
-        <div class="property-group">
-            <label>Height</label>
-            <input type="number" value="${Math.round(element.height)}" 
-                   onchange="editor.updateElementProperty('height', this.value)">
-        </div>
-        `;
+        // Position Y
+        const posYGroup = this.createPropertyInput('Position Y', 'number', Math.round(element.y), (value) => {
+            this.updateElementProperty('y', value);
+        });
+        panel.appendChild(posYGroup);
         
+        // Width
+        const widthGroup = this.createPropertyInput('Width', 'number', Math.round(element.width), (value) => {
+            this.updateElementProperty('width', value);
+        });
+        panel.appendChild(widthGroup);
+        
+        // Height
+        const heightGroup = this.createPropertyInput('Height', 'number', Math.round(element.height), (value) => {
+            this.updateElementProperty('height', value);
+        });
+        panel.appendChild(heightGroup);
+        
+        // Text input for text and note elements
         if (element.type === 'text' || element.type === 'note') {
-            html += `
-                <div class="property-group">
-                    <label>Text</label>
-                    <input type="text" value="${escapeHtml(element.text)}" 
-                           onchange="editor.updateElementProperty('text', this.value)">
-                </div>
-            `;
+            const textGroup = this.createPropertyInput('Text', 'text', element.text, (value) => {
+                this.updateElementProperty('text', value);
+            });
+            panel.appendChild(textGroup);
         }
         
+        // Measurement input for measure elements
         if (element.type === 'measure') {
-            html += `
-                <div class="property-group">
-                    <label>Measurement</label>
-                    <input type="text" value="${escapeHtml(element.length)}" 
-                           onchange="editor.updateElementProperty('length', this.value)">
-                </div>
-            `;
+            const measureGroup = this.createPropertyInput('Measurement', 'text', element.length, (value) => {
+                this.updateElementProperty('length', value);
+            });
+            panel.appendChild(measureGroup);
         }
         
-        html += `
-            <button onclick="editor.deleteSelectedElement()" 
-                    class="btn btn-secondary btn-block" 
-                    style="background: #dc3545; color: white; margin-top: 12px;">
-                Delete Object
-            </button>
-        `;
+        // Delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-secondary btn-block';
+        deleteBtn.style.background = '#dc3545';
+        deleteBtn.style.color = 'white';
+        deleteBtn.style.marginTop = '12px';
+        deleteBtn.textContent = 'Delete Object';
+        deleteBtn.addEventListener('click', () => this.deleteSelectedElement());
+        panel.appendChild(deleteBtn);
+    }
+    
+    createPropertyInput(label, type, value, onChange) {
+        const group = document.createElement('div');
+        group.className = 'property-group';
         
-        panel.innerHTML = html;
+        const labelEl = document.createElement('label');
+        labelEl.textContent = label;
+        group.appendChild(labelEl);
+        
+        const input = document.createElement('input');
+        input.type = type;
+        input.value = value;
+        input.addEventListener('change', (e) => onChange(e.target.value));
+        group.appendChild(input);
+        
+        return group;
     }
     
     updateElementProperty(property, value) {
@@ -535,20 +544,35 @@ class CountertopEditor {
             return;
         }
         
-        let html = '';
+        // Clear the list
+        elementsList.innerHTML = '';
+        
         this.elements.forEach((element, index) => {
             const name = `${element.type} ${index + 1}`;
-            const isActive = this.selectedElement === element ? 'active' : '';
+            const isActive = this.selectedElement === element;
             
-            html += `
-                <div class="layer-item ${isActive}" onclick="editor.selectElement(${index})">
-                    <span>${name}</span>
-                    <span class="delete-layer" onclick="event.stopPropagation(); editor.deleteElement(${index})">✕</span>
-                </div>
-            `;
+            // Create layer item
+            const layerItem = document.createElement('div');
+            layerItem.className = 'layer-item' + (isActive ? ' active' : '');
+            layerItem.addEventListener('click', () => this.selectElement(index));
+            
+            // Add element name
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = name;
+            layerItem.appendChild(nameSpan);
+            
+            // Add delete button
+            const deleteSpan = document.createElement('span');
+            deleteSpan.className = 'delete-layer';
+            deleteSpan.textContent = '✕';
+            deleteSpan.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.deleteElement(index);
+            });
+            layerItem.appendChild(deleteSpan);
+            
+            elementsList.appendChild(layerItem);
         });
-        
-        elementsList.innerHTML = html;
     }
     
     selectElement(index) {
