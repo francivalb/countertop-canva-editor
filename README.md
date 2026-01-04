@@ -5,10 +5,10 @@ A professional web-based Canva-style editor tailored for countertop businesses o
 ## ✨ Features
 
 ### 🎨 Design Tools
-- **Visual Canvas Editor** - Intuitive drag-and-drop interface powered by Fabric.js
-- **Multiple Tools** - Select, text, shapes, measurements, and image insertion
-- **Layer Management** - Organize and manage design elements with a visual layer panel
-- **Zoom Controls** - Precise zoom in/out and fit-to-screen functionality
+- **Visual Canvas Editor** - Intuitive interface built with HTML5 Canvas API
+- **Multiple Tools** - Select, text, shapes, measurements, and notes
+- **Element Management** - Track and manage design elements with a visual element panel
+- **Interactive Canvas** - Drag and drop elements, with grid overlay for precision
 
 ### 📐 Countertop-Specific Features
 - **Pre-made Templates** - Quick start with common sizes:
@@ -27,10 +27,10 @@ A professional web-based Canva-style editor tailored for countertop businesses o
 - **Thickness Options** - Standard thickness selections (3/4", 1 1/4", 2", 3")
 
 ### 💼 Business-Ready Features
-- **Export Options** - Save designs as PNG or PDF with specifications
-- **Professional Output** - High-quality exports with detailed specification sheets
+- **Export Options** - Save designs as PNG images or JSON files
+- **Professional Output** - High-quality canvas exports with detailed specifications
 - **Responsive Design** - Works on desktop, tablet, and mobile devices
-- **No Installation Required** - Runs entirely in the browser
+- **No Installation Required** - Runs entirely in the browser with no dependencies
 
 ## 🚀 Getting Started
 
@@ -57,34 +57,33 @@ A professional web-based Canva-style editor tailored for countertop businesses o
 - **Text**: Click the Text tool, then click anywhere on the canvas
 - **Shapes**: Click the Shape tool to add rectangles for cutouts or features
 - **Measurements**: Add dimension lines to annotate your design
-- **Images**: Upload logos, patterns, or reference images
+- **Notes**: Add sticky notes for comments or specifications
 
 #### Working with Objects
-- **Select**: Click an object to select it
+- **Select**: Click an object to select it (selection shown with dashed border)
 - **Move**: Drag selected objects to reposition
-- **Resize**: Use corner handles to resize
-- **Rotate**: Use the rotation handle
-- **Properties**: Adjust position, size, rotation, and opacity in the Properties panel
-- **Layers**: View and manage all objects in the Layers panel
+- **Properties**: Adjust position, size, and content in the Properties panel
+- **Elements**: View and manage all objects in the Elements panel
+- **Delete**: Select an object and click "Delete Object" in the Properties panel
 
 #### Exporting Your Design
 - **PNG**: High-resolution image file for presentations and web use
-- **PDF**: Professional document with design and detailed specifications
+- **Save Design**: Export as JSON file to save and reload your design later
 
 ## 💻 Technical Details
 
 ### Technologies Used
-- **HTML5** - Semantic markup and structure
+- **HTML5** - Semantic markup and Canvas API for rendering
 - **CSS3** - Modern responsive styling with flexbox and grid
-- **JavaScript (ES6+)** - Object-oriented application architecture
-- **Fabric.js** - Powerful canvas manipulation library
-- **jsPDF** - Client-side PDF generation
+- **JavaScript (ES6+)** - Object-oriented application architecture with vanilla JS
+- **No External Dependencies** - Pure browser-based implementation
 
 ### Browser Compatibility
 - Chrome (recommended)
 - Firefox
 - Safari
 - Edge
+- Any modern browser with HTML5 Canvas support
 
 ### File Structure
 ```
