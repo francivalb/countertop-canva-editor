@@ -1,74 +1,117 @@
-<header>
+# Countertop Designer - Canva-Style Editor
 
-<!--
-  <<< Author notes: Course header >>>
-  Include a 1280×640 image, course title in sentence case, and a concise description in emphasis.
-  In your repository settings: enable template repository, add your 1280×640 social image, auto delete head branches.
-  Add your open source license, GitHub uses MIT license.
--->
+A fast and lightweight web-based countertop drawing & quote preparation tool built with React and Konva.js.
 
-# Introduction to GitHub
+## 🚀 Features
 
-_Get started using GitHub in less than an hour._
+- **Interactive Canvas**: Draw countertop shapes with click-and-drag functionality
+- **Multiple Shape Types**: Support for rectangles and L-shaped countertops
+- **Real-time Measurements**: Automatic dimension calculations in inches and square feet
+- **Quote Generation**: Calculate costs based on customizable price per square foot
+- **Transform Tools**: Move, resize, and delete shapes with intuitive controls
+- **Export Quotes**: Download quote summaries as JSON files
+- **Grid Layout**: Precise alignment with background grid
 
-</header>
+## 🛠️ Tech Stack
 
-<!--
-  <<< Author notes: Course start >>>
-  Include start button, a note about Actions minutes,
-  and tell the learner why they should take the course.
--->
+- **React 19** - Modern UI framework
+- **Konva.js** - High-performance 2D canvas library
+- **react-konva** - React bindings for Konva
+- **Vite** - Fast build tool and dev server
 
-## Welcome
+## 📦 Installation
 
-People use GitHub to build some of the most advanced technologies in the world. Whether you’re visualizing data or building a new game, there’s a whole community and set of tools on GitHub that can help you do it even better. GitHub Skills’ “Introduction to GitHub” course guides you through everything you need to start contributing in less than an hour.
+```bash
+# Clone the repository
+git clone https://github.com/francivalb/countertop-canva-editor.git
 
-- **Who is this for**: New developers, new GitHub users, and students.
-- **What you'll learn**: We'll introduce repositories, branches, commits, and pull requests.
-- **What you'll build**: We'll make a short Markdown file you can use as your [profile README](https://docs.github.com/account-and-profile/setting-up-and-managing-your-github-profile/customizing-your-profile/managing-your-profile-readme).
-- **Prerequisites**: None. This course is a great introduction for your first day on GitHub.
-- **How long**: This course takes less than one hour to complete.
+# Navigate to project directory
+cd countertop-canva-editor
 
-In this course, you will:
+# Install dependencies
+npm install
 
-1. Create a branch
-2. Commit a file
-3. Open a pull request
-4. Merge your pull request
+# Start development server
+npm run dev
+```
 
-### How to start this course
+## 🎯 Usage
 
-<!-- For start course, run in JavaScript:
-'https://github.com/new?' + new URLSearchParams({
-  template_owner: 'skills',
-  template_name: 'introduction-to-github',
-  owner: '@me',
-  name: 'skills-introduction-to-github',
-  description: 'My clone repository',
-  visibility: 'public',
-}).toString()
--->
+1. **Select a Tool**: Choose from Rectangle or L-Shape in the left toolbar
+2. **Draw**: Click and drag on the canvas to create countertop shapes
+3. **Edit**: Use the Select tool to move and resize shapes
+4. **Delete**: Select a shape and press the Delete key
+5. **Quote**: Adjust pricing and view real-time cost calculations in the right panel
+6. **Export**: Download your quote as a JSON file for records
 
-[![start-course](https://user-images.githubusercontent.com/1221423/235727646-4a590299-ffe5-480d-8cd5-8194ea184546.svg)](https://github.com/new?template_owner=skills&template_name=introduction-to-github&owner=%40me&name=skills-introduction-to-github&description=My+clone+repository&visibility=public)
+## 🏗️ Build for Production
 
-1. Right-click **Start course** and open the link in a new tab.
-2. In the new tab, most of the prompts will automatically fill in for you.
-   - For owner, choose your personal account or an organization to host the repository.
-   - We recommend creating a public repository, as private repositories will [use Actions minutes](https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions).
-   - Scroll down and click the **Create repository** button at the bottom of the form.
-3. After your new repository is created, wait about 20 seconds, then refresh the page. Follow the step-by-step instructions in the new repository's README.
+```bash
+npm run build
+```
 
-<footer>
+The optimized production build will be in the `dist` folder.
 
-<!--
-  <<< Author notes: Footer >>>
-  Add a link to get support, GitHub status page, code of conduct, license link.
--->
+## 📝 Development
+
+```bash
+# Run development server
+npm run dev
+
+# Lint code
+npm run lint
+
+# Preview production build
+npm run preview
+```
+
+## 🎨 Project Structure
+
+```
+countertop-canva-editor/
+├── src/
+│   ├── components/
+│   │   ├── CountertopEditor.jsx    # Main canvas component
+│   │   ├── CountertopEditor.css
+│   │   ├── Toolbar.jsx             # Tool selection panel
+│   │   ├── Toolbar.css
+│   │   ├── QuotePanel.jsx          # Quote calculation panel
+│   │   └── QuotePanel.css
+│   ├── App.jsx                     # Main application
+│   ├── App.css
+│   ├── index.css
+│   └── main.jsx
+├── public/
+├── index.html
+├── package.json
+└── vite.config.js
+```
+
+## 🌟 Key Features Explained
+
+### Drawing Tools
+- **Rectangle**: Perfect for standard countertop sections
+- **L-Shape**: Ideal for corner countertops
+- **Select**: Move and resize existing shapes
+
+### Measurement System
+- Dimensions displayed in inches
+- Area calculated in square feet
+- 10 pixels = 1 inch conversion ratio
+
+### Quote Calculation
+- Customizable price per square foot
+- Real-time total cost updates
+- Individual shape area breakdowns
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+## 👥 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ---
 
-Get help: [Post in our discussion board](https://github.com/orgs/skills/discussions/categories/introduction-to-github) &bull; [Review the GitHub status page](https://www.githubstatus.com/)
-
-&copy; 2024 GitHub &bull; [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/code_of_conduct.md) &bull; [MIT License](https://gh.io/mit)
-
-</footer>
+Built with ❤️ using React and Konva.js

@@ -1,0 +1,103 @@
+.toolbar {
+  width: 250px;
+  background: white;
+  border-right: 1px solid #e0e0e0;
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.toolbar h3 {
+  color: #333;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.tool-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tool-group h4 {
+  color: #666;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.tool-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.tool-btn:hover {
+  background: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.tool-btn.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.tool-btn.danger {
+  background: #fee;
+  color: #c00;
+}
+
+.tool-btn.danger:hover {
+  background: #fdd;
+  border-color: #fcc;
+}
+
+.tool-icon {
+  font-size: 1.25rem;
+}
+
+.tool-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.tool-info {
+  margin-top: auto;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.tool-info p {
+  margin-bottom: 0.5rem;
+}
+
+.tool-info ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.tool-info li {
+  padding: 0.25rem 0;
+  position: relative;
+  padding-left: 1.25rem;
+}
+
+.tool-info li:before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: #667eea;
+}
